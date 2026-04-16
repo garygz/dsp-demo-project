@@ -1,0 +1,43 @@
+version: "3.8"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: app
+    depends_on:
+      - db
+    environment:
+      - M2_HOME=/root/.m2
+      - POSTGRES_HOST=db
+      - POSTGRES_USER=app
+      - POSTGRES_PASSWORD=app
+      - POSTGRES_DB=dspdemo
+    networks:
+      - app
+    ports:
+      - 8080:8080
+    volumes:
+      - $HOME/.m2:/root/.m2
+    restart: unless-stopped
+
+  db:
+    image: postgres:16
+    container_name: db
+    environment:
+      - POSTGRES_USER=app
+      - POSTGRES_PASSWORD=app
+      - POSTGRES_DB=dspdemo
+    ports:
+      - 5432:5432  # ← add this, maps container port to your machine
+    networks:
+      - app
+    volumes:
+      - dbdata:/var/lib/postgresql/data  # different path from MySQL
+
+networks:
+  app: {}
+
+volumes:
+  dbdata: {}

@@ -1,0 +1,50 @@
+package com.example.dspdemoproject.controller;
+
+import com.example.dspdemoproject.entity.Advertiser;
+import com.example.dspdemoproject.entity.Campaign;
+import com.example.dspdemoproject.service.DashBoardService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.io.InvalidObjectException;
+import java.util.List;
+import java.util.UUID;
+
+@RestController
+public class RestEndpointController {
+    private static final Logger logger = LoggerFactory.getLogger(RestEndpointController.class);
+
+    @Autowired
+    private DashBoardService dashBoardService;
+
+    @GetMapping(value = "/advertisers")
+    public ResponseEntity<List<Advertiser>> listAllAdvertisers() {
+        return ResponseEntity.ok(dashBoardService.getAllAdvertisers());
+    }
+
+    @PostMapping(value = "/advertisers")
+    public ResponseEntity<Void> addAdvertiser(@RequestBody Advertiser newAdv) {
+        logger.debug("Creating advertiser {}", newAdv.getName());
+        dashBoardService.addAdvertiser(newAdv);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+
+    @GetMapping("/advertisers/{advertiserId}/campaigns")
+    public ResponseEntity<List<Campaign>> listAllCampaigns(@PathVariable UUID advertiserId) {
+        return ResponseEntity.ok(dashBoardService.getAllCampaigns(advertiserId));
+    }
+
+    @PostMapping(value = "/advertisers/{advertiserId}/campaigns")
+    public ResponseEntity<Void> addCampaign(@RequestBody Campaign newCampaign, @PathVariable UUID advertiserId) {
+        logger.debug("Creating newCampaign {}", newCampaign.getName());
+        dashBoardService.addCampaign(newCampaign, advertiserId);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+
+}
