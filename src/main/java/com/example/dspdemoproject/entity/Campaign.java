@@ -28,7 +28,7 @@ public class Campaign {
     private List<Impression> impressions;
 
     @ManyToOne
-    @JoinColumn(name = "advertiser_id") // Creates 'advertiser_id' column in 'advertiser' table
+    @JoinColumn(name = "advertiser_id", nullable = false) // Creates 'advertiser_id' column in 'advertiser' table
     private Advertiser advertiser;
 
     public void setId(UUID id) {
