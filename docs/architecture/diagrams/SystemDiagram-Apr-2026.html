@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<title>AdTech High-Scale Platform Architecture</title>
+<style>
+  body {
+    margin: 0;
+    padding: 32px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #f5f7fa;
+    color: #232f3e;
+  }
+  h1 {
+    text-align: center;
+    color: #232f3e;
+    margin-bottom: 4px;
+  }
+  .subtitle {
+    text-align: center;
+    color: #687078;
+    margin-bottom: 32px;
+    font-size: 14px;
+  }
+  .diagram {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 12px;
+    padding: 40px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  }
+  svg {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+  .legend {
+    max-width: 1200px;
+    margin: 24px auto 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 12px;
+  }
+  .legend-item {
+    background: white;
+    padding: 14px 18px;
+    border-radius: 8px;
+    border-left: 4px solid #ff9900;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    font-size: 13px;
+  }
+  .legend-item strong { color: #232f3e; display: block; margin-bottom: 4px; }
+  .legend-item.crud { border-left-color: #2e73b8; }
+  .legend-item.ingest { border-left-color: #c925d1; }
+  .legend-item.agg { border-left-color: #7aa116; }
+</style>
+</head>
+<body>
+
+<h1>AdTech High-Scale Platform</h1>
+<div class="subtitle">AWS ALB → ECS/EC2 → Spring Boot API with dual-path data flow</div>
+
+<div class="diagram">
+<svg viewBox="0 0 1120 760" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#546270"></path>
+    </marker>
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2e73b8"></path>
+    </marker>
+    <marker id="arrow-purple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#c925d1"></path>
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#7aa116"></path>
+    </marker>
+    <lineargradient id="aws" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#ffac31"></stop>
+      <stop offset="100%" stop-color="#ff9900"></stop>
+    </lineargradient>
+  </defs>
+
+  <!-- VPC container -->
+  <rect x="40" y="80" width="1040" height="640" rx="14" fill="#fafbfc" stroke="#d5dbdb" stroke-dasharray="6 4" stroke-width="2"></rect>
+  <text x="60" y="108" font-size="14" font-weight="600" fill="#687078">AWS VPC — us-east-1</text>
+
+  <!-- Clients -->
+  <g>
+    <rect x="440" y="20" width="240" height="48" rx="8" fill="#232f3e"></rect>
+    <text x="560" y="50" text-anchor="middle" fill="white" font-size="15" font-weight="600">Advertisers · SSPs · Pixels</text>
+  </g>
+  <line x1="560" y1="68" x2="560" y2="138" stroke="#546270" stroke-width="2" marker-end="url(#arrow)"></line>
+
+  <!-- ALB -->
+  <g>
+    <rect x="420" y="140" width="280" height="64" rx="8" fill="url(#aws)"></rect>
+    <text x="560" y="170" text-anchor="middle" fill="white" font-size="16" font-weight="700">AWS Application Load Balancer</text>
+    <text x="560" y="190" text-anchor="middle" fill="white" font-size="12">TLS termination · path-based routing</text>
+  </g>
+
+  <!-- Path labels -->
+  <text x="320" y="240" text-anchor="middle" font-size="12" fill="#2e73b8" font-weight="600">/advertisers  /campaigns</text>
+  <text x="800" y="240" text-anchor="middle" font-size="12" fill="#c925d1" font-weight="600">/events  /impressions  /clicks</text>
+
+  <line x1="490" y1="204" x2="320" y2="260" stroke="#2e73b8" stroke-width="2" marker-end="url(#arrow-blue)"></line>
+  <line x1="630" y1="204" x2="800" y2="260" stroke="#c925d1" stroke-width="2" marker-end="url(#arrow-purple)"></line>
+
+  <!-- ECS cluster container -->
+  <rect x="80" y="270" width="960" height="180" rx="10" fill="#fff4e6" stroke="#ff9900" stroke-width="1.5"></rect>
+  <text x="100" y="292" font-size="13" font-weight="700" fill="#b86b00">Amazon ECS Cluster (on EC2) — Auto Scaling Group</text>
+
+  <!-- CRUD service -->
+  <g>
+    <rect x="120" y="310" width="360" height="120" rx="10" fill="white" stroke="#2e73b8" stroke-width="2"></rect>
+    <text x="300" y="336" text-anchor="middle" font-size="14" font-weight="700" fill="#2e73b8">CRUD Service (Spring Boot)</text>
+    <rect x="150" y="352" width="90" height="60" rx="6" fill="#eaf2fb" stroke="#2e73b8"></rect>
+    <text x="195" y="378" text-anchor="middle" font-size="11" font-weight="600" fill="#2e73b8">Task 1</text>
+    <text x="195" y="394" text-anchor="middle" font-size="10" fill="#546270">EC2</text>
+    <rect x="255" y="352" width="90" height="60" rx="6" fill="#eaf2fb" stroke="#2e73b8"></rect>
+    <text x="300" y="378" text-anchor="middle" font-size="11" font-weight="600" fill="#2e73b8">Task 2</text>
+    <text x="300" y="394" text-anchor="middle" font-size="10" fill="#546270">EC2</text>
+    <rect x="360" y="352" width="90" height="60" rx="6" fill="#eaf2fb" stroke="#2e73b8"></rect>
+    <text x="405" y="378" text-anchor="middle" font-size="11" font-weight="600" fill="#2e73b8">Task N</text>
+    <text x="405" y="394" text-anchor="middle" font-size="10" fill="#546270">EC2</text>
+  </g>
+
+  <!-- Ingestion service -->
+  <g>
+    <rect x="640" y="310" width="360" height="120" rx="10" fill="white" stroke="#c925d1" stroke-width="2"></rect>
+    <text x="820" y="336" text-anchor="middle" font-size="14" font-weight="700" fill="#c925d1">Ingestion Service (Spring Boot)</text>
+    <rect x="670" y="352" width="90" height="60" rx="6" fill="#f8eafb" stroke="#c925d1"></rect>
+    <text x="715" y="378" text-anchor="middle" font-size="11" font-weight="600" fill="#c925d1">Task 1</text>
+    <text x="715" y="394" text-anchor="middle" font-size="10" fill="#546270">EC2 · high QPS</text>
+    <rect x="775" y="352" width="90" height="60" rx="6" fill="#f8eafb" stroke="#c925d1"></rect>
+    <text x="820" y="378" text-anchor="middle" font-size="11" font-weight="600" fill="#c925d1">Task 2</text>
+    <text x="820" y="394" text-anchor="middle" font-size="10" fill="#546270">EC2 · high QPS</text>
+    <rect x="880" y="352" width="90" height="60" rx="6" fill="#f8eafb" stroke="#c925d1"></rect>
+    <text x="925" y="378" text-anchor="middle" font-size="11" font-weight="600" fill="#c925d1">Task N</text>
+    <text x="925" y="394" text-anchor="middle" font-size="10" fill="#546270">EC2 · high QPS</text>
+  </g>
+
+  <!-- Arrows from ECS to data stores -->
+  <line x1="300" y1="430" x2="300" y2="540" stroke="#2e73b8" stroke-width="2" marker-end="url(#arrow-blue)"></line>
+  <text x="312" y="485" font-size="11" fill="#2e73b8" font-weight="600">JPA / JDBC</text>
+
+  <line x1="820" y1="430" x2="820" y2="540" stroke="#c925d1" stroke-width="2" marker-end="url(#arrow-purple)"></line>
+  <text x="832" y="485" font-size="11" fill="#c925d1" font-weight="600">PutItem / BatchWrite</text>
+
+  <!-- DynamoDB -->
+  <g>
+    <rect x="670" y="545" width="300" height="88" rx="10" fill="#3b48cc"></rect>
+    <text x="820" y="575" text-anchor="middle" fill="white" font-size="15" font-weight="700">Amazon DynamoDB</text>
+    <text x="820" y="596" text-anchor="middle" fill="#c7cdfa" font-size="11">Raw events · on-demand capacity</text>
+    <text x="820" y="614" text-anchor="middle" fill="#c7cdfa" font-size="11">TTL enabled · partitioned by advertiser_id</text>
+  </g>
+
+  <!-- Aggregator -->
+  <g>
+    <rect x="420" y="545" width="200" height="88" rx="10" fill="#7aa116"></rect>
+    <text x="520" y="573" text-anchor="middle" fill="white" font-size="14" font-weight="700">Aggregator</text>
+    <text x="520" y="591" text-anchor="middle" fill="#e8f3d0" font-size="11">Scheduled @ 30s</text>
+    <text x="520" y="608" text-anchor="middle" fill="#e8f3d0" font-size="11">(Spring @Scheduled)</text>
+    <text x="520" y="624" text-anchor="middle" fill="#e8f3d0" font-size="11">roll-up by campaign</text>
+  </g>
+
+  <!-- Aggregator arrows -->
+  <line x1="670" y1="589" x2="620" y2="589" stroke="#7aa116" stroke-width="2" marker-end="url(#arrow-green)"></line>
+  <text x="630" y="580" font-size="10" fill="#7aa116" font-weight="600">Scan/Query</text>
+
+  <line x1="420" y1="589" x2="270" y2="589" stroke="#7aa116" stroke-width="2" marker-end="url(#arrow-green)"></line>
+  <text x="300" y="580" font-size="10" fill="#7aa116" font-weight="600">UPSERT metrics</text>
+
+  <!-- RDS Postgres -->
+  <g>
+    <rect x="120" y="545" width="220" height="88" rx="10" fill="#336791"></rect>
+    <text x="230" y="573" text-anchor="middle" fill="white" font-size="15" font-weight="700">Amazon RDS</text>
+    <text x="230" y="592" text-anchor="middle" fill="white" font-size="13" font-weight="600">PostgreSQL</text>
+    <text x="230" y="612" text-anchor="middle" fill="#b9d4e8" font-size="11">advertisers · campaigns</text>
+    <text x="230" y="626" text-anchor="middle" fill="#b9d4e8" font-size="11">aggregated metrics</text>
+  </g>
+
+  <!-- Observability footer -->
+  <g>
+    <rect x="80" y="665" width="960" height="40" rx="8" fill="#eef2f6" stroke="#cfd6dd"></rect>
+    <text x="560" y="691" text-anchor="middle" font-size="12" fill="#546270">
+      CloudWatch metrics/logs · X-Ray tracing · Secrets Manager · IAM roles per task · Auto Scaling on CPU &amp; request count
+    </text>
+  </g>
+</svg>
+</div>
+
+<div class="legend">
+  <div class="legend-item">
+    <strong>Edge &amp; Routing</strong>
+    ALB terminates TLS and routes by path. CRUD traffic and ingestion traffic are split at L7 so they can scale independently.
+  </div>
+  <div class="legend-item crud">
+    <strong>CRUD Path (blue)</strong>
+    /advertisers and /campaigns — low QPS, relational. Spring Boot → JPA → RDS PostgreSQL.
+  </div>
+  <div class="legend-item ingest">
+    <strong>Ingestion Path (purple)</strong>
+    /events, /impressions, /clicks — high QPS, write-heavy. Spring Boot → DynamoDB on-demand for flat scaling.
+  </div>
+  <div class="legend-item agg">
+    <strong>Aggregation (green)</strong>
+    A Spring @Scheduled job runs every 30s, rolls up raw events from DynamoDB, and UPSERTs aggregated counters into Postgres for reporting.
+  </div>
+</div>
+
+
+
+</body></html>
