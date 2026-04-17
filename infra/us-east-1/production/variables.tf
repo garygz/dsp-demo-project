@@ -1,6 +1,6 @@
 variable "aws_region" {
   type    = string
-  default = "eu-west-1"
+  default = "us-east-1"
 }
 
 variable "environment_name" {
@@ -10,12 +10,12 @@ variable "environment_name" {
 
 variable "service_name" {
   type    = string
-  default = "cargarage-api"
+  default = "dspdemoproject-api"
 }
 
 variable "service_name_short" {
   type    = string
-  default = "cargarage"
+  default = "dspdemo"
 }
 
 variable "ecs_container_instance_type" {
@@ -65,7 +65,7 @@ variable "github_username" {
 
 variable "github_repo_name" {
   type    = string
-  default = "aws-terraform-cicd-java-springboot"
+  default = "dsp-demo-project"
 }
 
 variable "github_branch" {
