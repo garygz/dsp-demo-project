@@ -33,6 +33,9 @@ dependencies {
     runtimeOnly 'org.postgresql:postgresql'
     testImplementation 'com.h2database:h2'
 
+    // AWS DynamoDB Enhanced Client (SDK v2)
+    implementation platform('software.amazon.awssdk:bom:2.31.19')
+    implementation 'software.amazon.awssdk:dynamodb-enhanced'
 }
 
 tasks.named('test') {

@@ -1,4 +1,4 @@
-package com.example.dspdemoproject.entity;
+package com.garygz.dspdemoproject.entity;
 
 import jakarta.persistence.*;
 

@@ -1,11 +1,10 @@
-package com.example.dspdemoproject.controller;
+package com.garygz.dspdemoproject.controller;
 
-import com.example.dspdemoproject.controller.exceptions.EntityNotFound;
-import com.example.dspdemoproject.controller.exceptions.InvalidInputDataProvided;
+import com.garygz.dspdemoproject.controller.exceptions.EntityNotFound;
+import com.garygz.dspdemoproject.controller.exceptions.InvalidInputDataProvided;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.*;
 
 

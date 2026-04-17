@@ -1,7 +1,7 @@
-package com.example.dspdemoproject.repository;
+package com.garygz.dspdemoproject.repository;
 
-import com.example.dspdemoproject.entity.Advertiser;
-import com.example.dspdemoproject.entity.Campaign;
+import com.garygz.dspdemoproject.entity.Advertiser;
+import com.garygz.dspdemoproject.entity.Campaign;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

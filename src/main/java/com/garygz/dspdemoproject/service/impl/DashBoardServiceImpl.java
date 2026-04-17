@@ -1,13 +1,12 @@
-package com.example.dspdemoproject.service.impl;
+package com.garygz.dspdemoproject.service.impl;
 
-import com.example.dspdemoproject.controller.exceptions.InvalidInputDataProvided;
-import com.example.dspdemoproject.entity.Advertiser;
-import com.example.dspdemoproject.entity.Campaign;
-import com.example.dspdemoproject.repository.AdvertiserRepository;
-import com.example.dspdemoproject.repository.CampaignRepository;
-import com.example.dspdemoproject.service.DashBoardService;
+import com.garygz.dspdemoproject.controller.exceptions.InvalidInputDataProvided;
+import com.garygz.dspdemoproject.entity.Advertiser;
+import com.garygz.dspdemoproject.entity.Campaign;
+import com.garygz.dspdemoproject.repository.AdvertiserRepository;
+import com.garygz.dspdemoproject.repository.CampaignRepository;
+import com.garygz.dspdemoproject.service.DashBoardService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.UUID;

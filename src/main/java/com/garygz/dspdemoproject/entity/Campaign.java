@@ -1,4 +1,4 @@
-package com.example.dspdemoproject.entity;
+package com.garygz.dspdemoproject.entity;
 
 
 import jakarta.persistence.*;
@@ -24,11 +24,8 @@ public class Campaign {
     @Column(name = "created_at", columnDefinition = "TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP")
     private OffsetDateTime createdAt;
 
-    @OneToMany(mappedBy = "campaign", cascade = CascadeType.ALL)
-    private List<Impression> impressions;
-
     @ManyToOne
-    @JoinColumn(name = "advertiser_id", nullable = false) // Creates 'advertiser_id' column in 'advertiser' table
+    @JoinColumn(name = "advertiser_id", nullable = false) //noinspection JpaAttributeNameInspection
     private Advertiser advertiser;
 
     public void setId(UUID id) {
@@ -61,14 +58,6 @@ public class Campaign {
 
     public void setCreatedAt(OffsetDateTime createdAt) {
         this.createdAt = createdAt;
-    }
-
-    public List<Impression> getImpressions() {
-        return impressions;
-    }
-
-    public void setImpressions(List<Impression> impressions) {
-        this.impressions = impressions;
     }
 
     public Advertiser getAdvertiser() {
