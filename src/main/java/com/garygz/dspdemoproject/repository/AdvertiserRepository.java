@@ -1,11 +1,10 @@
-package com.example.dspdemoproject.repository;
+package com.garygz.dspdemoproject.repository;
 
-import com.example.dspdemoproject.entity.Advertiser;
+import com.garygz.dspdemoproject.entity.Advertiser;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.io.InvalidObjectException;
 import java.util.UUID;
 import java.util.List;
 
