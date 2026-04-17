@@ -2,7 +2,10 @@ package com.garygz.dspdemoproject.controller;
 
 import com.garygz.dspdemoproject.entity.Advertiser;
 import com.garygz.dspdemoproject.entity.Campaign;
+import com.garygz.dspdemoproject.entity.Click;
+import com.garygz.dspdemoproject.entity.Impression;
 import com.garygz.dspdemoproject.service.DashBoardService;
+import com.garygz.dspdemoproject.service.DataIngestionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +22,9 @@ public class RestEndpointController {
 
     @Autowired
     private DashBoardService dashBoardService;
+
+    @Autowired
+    private DataIngestionService dataIngestionService;
 
     @GetMapping(value = "/advertisers")
     public ResponseEntity<List<Advertiser>> listAllAdvertisers() {
@@ -44,6 +50,21 @@ public class RestEndpointController {
         dashBoardService.addCampaign(newCampaign, advertiserId);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
+
+    @PostMapping(value = "/advertisers/{advertiserId}/campaigns/{campaignId}/impressions")
+    public ResponseEntity<Void> addImpression(@RequestBody Impression impression, @PathVariable UUID advertiserId,  @PathVariable UUID campaignId) {
+        logger.debug("Creating impression {}", impression.getCampaignId());
+        dataIngestionService.addImporession(impression);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @PostMapping(value = "/advertisers/{advertiserId}/campaigns/{campaignId}/impressions/{impressionId}/clicks")
+    public ResponseEntity<Void> addClick(@RequestBody Click click, @PathVariable UUID advertiserId, @PathVariable UUID campaignId, @PathVariable UUID impressionId) {
+        logger.debug("Creating click {}, impression {}", click.getId(), click.getImpressionId());
+        dataIngestionService.addClick(click);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
 
 
 }
