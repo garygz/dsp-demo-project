@@ -25,7 +25,7 @@ public class Campaign {
     private OffsetDateTime createdAt;
 
     @ManyToOne
-    @JoinColumn(name = "advertiser_id", nullable = false) // Creates 'advertiser_id' column in 'advertiser' table
+    @JoinColumn(name = "advertiser_id", nullable = false) //noinspection JpaAttributeNameInspection
     private Advertiser advertiser;
 
     public void setId(UUID id) {
@@ -58,14 +58,6 @@ public class Campaign {
 
     public void setCreatedAt(OffsetDateTime createdAt) {
         this.createdAt = createdAt;
-    }
-
-    public List<Impression> getImpressions() {
-        return impressions;
-    }
-
-    public void setImpressions(List<Impression> impressions) {
-        this.impressions = impressions;
     }
 
     public Advertiser getAdvertiser() {
