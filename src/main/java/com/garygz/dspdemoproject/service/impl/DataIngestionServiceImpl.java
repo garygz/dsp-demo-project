@@ -23,7 +23,7 @@ public class DataIngestionServiceImpl implements DataIngestionService {
     }
 
     @Override
-    public void addImporession(Impression impression) {
+    public void addImpression(Impression impression) {
         impressionRepository.save(impression);
     }
 }

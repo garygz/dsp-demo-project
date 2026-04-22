@@ -14,6 +14,8 @@ public class Impression {
     private UUID id;
     private UUID campaignId;
 
+    public Impression() {}
+
     @DynamoDbPartitionKey
     @DynamoDbConvertedBy(UuidAttributeConverter.class)
     public UUID getId() {

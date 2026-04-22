@@ -14,6 +14,8 @@ public class Click {
     private UUID id;
     private UUID impressionId;
 
+    public Click(){}
+
     @DynamoDbPartitionKey
     @DynamoDbConvertedBy(UuidAttributeConverter.class)
     public UUID getId() {
