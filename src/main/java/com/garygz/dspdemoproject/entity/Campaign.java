@@ -15,10 +15,10 @@ public class Campaign {
     @Column(columnDefinition = "uuid", updatable = false, nullable = false)
     private UUID id;
 
-    @Column(name = "name", nullable = false)
+    @Column(name = "name", nullable = false, columnDefinition = "TEXT")
     private String name;
 
-    @Column(name = "landing_page", nullable = false)
+    @Column(name = "landing_page", nullable = false, columnDefinition = "TEXT")
     private String landingPage;
 
     @Column(name = "created_at", columnDefinition = "TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP")
