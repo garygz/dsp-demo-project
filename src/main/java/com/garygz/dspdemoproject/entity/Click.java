@@ -1,37 +1,30 @@
 package com.garygz.dspdemoproject.entity;
 
-import software.amazon.awssdk.enhanced.dynamodb.internal.converter.attribute.UuidAttributeConverter;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbConvertedBy;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey;
-
-import java.util.UUID;
 
 @DynamoDbBean
 public class Click {
 
-    private UUID id;
-    private UUID impressionId;
+    private String campaignId;   // partition key
+    private String timestamp;    // sort key — ISO-8601
+    private String id;           // client-generated UUID
+    private String impressionId; // reference back to the originating impression
 
-    public Click(){}
+    public Click() {}
 
     @DynamoDbPartitionKey
-    @DynamoDbConvertedBy(UuidAttributeConverter.class)
-    public UUID getId() {
-        return id;
-    }
-
-    public void setId(UUID id) {
-        this.id = id;
-    }
+    public String getCampaignId() { return campaignId; }
+    public void setCampaignId(String campaignId) { this.campaignId = campaignId; }
 
     @DynamoDbSortKey
-    public UUID getImpressionId() {
-        return impressionId;
-    }
+    public String getTimestamp() { return timestamp; }
+    public void setTimestamp(String timestamp) { this.timestamp = timestamp; }
 
-    public void setImpressionId(UUID impressionId) {
-        this.impressionId = impressionId;
-    }
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
+
+    public String getImpressionId() { return impressionId; }
+    public void setImpressionId(String impressionId) { this.impressionId = impressionId; }
 }

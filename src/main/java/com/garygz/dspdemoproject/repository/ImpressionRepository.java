@@ -11,7 +11,6 @@ import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException;
 
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 public class ImpressionRepository {
@@ -37,19 +36,11 @@ public class ImpressionRepository {
         table.putItem(impression);
     }
 
-    public Optional<Impression> findById(String id, String impressionId) {
-        Key key = Key.builder().partitionValue(id).sortValue(impressionId).build();
-        return Optional.ofNullable(table.getItem(key));
-    }
-
-    public List<Impression> findByImpressionId(String impressionId) {
-        QueryConditional query = QueryConditional.keyEqualTo(
-                Key.builder().partitionValue(impressionId).build());
+    public List<Impression> findByCampaignIdBetween(String campaignId, String fromTimestamp, String toTimestamp) {
+        QueryConditional query = QueryConditional.sortBetween(
+                Key.builder().partitionValue(campaignId).sortValue(fromTimestamp).build(),
+                Key.builder().partitionValue(campaignId).sortValue(toTimestamp).build()
+        );
         return table.query(query).items().stream().toList();
-    }
-
-    public void delete(String id, String impressionId) {
-        Key key = Key.builder().partitionValue(id).sortValue(impressionId).build();
-        table.deleteItem(key);
     }
 }
