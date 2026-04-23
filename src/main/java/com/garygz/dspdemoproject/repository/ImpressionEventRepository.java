@@ -6,11 +6,18 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.List;
 import com.garygz.dspdemoproject.entity.ImpressionEventId;
 import java.util.UUID;
 
 public interface ImpressionEventRepository extends JpaRepository<ImpressionEvent, ImpressionEventId> {
+
+    @Query("SELECT COALESCE(SUM(i.count), 0) FROM ImpressionEvent i " +
+           "WHERE i.campaignId = :id AND i.occurredAt >= :from AND i.occurredAt < :to")
+    long sumCountBetween(@Param("id") UUID id,
+                         @Param("from") OffsetDateTime from,
+                         @Param("to") OffsetDateTime to);
 
     @Query("""
             SELECT CAST(i.occurredAt AS LocalDate), SUM(i.count)

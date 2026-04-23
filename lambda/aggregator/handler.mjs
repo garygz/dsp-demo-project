@@ -2,41 +2,45 @@
  * DynamoDB Streams → Lambda Tumbling Window aggregator.
  *
  * Deployed with two event source mappings (one per table):
- *   - impressions table stream  →  writes to impression_events
- *   - clicks table stream       →  writes to click_events
+ *   - impressions table stream  →  writes impressions/ prefix to S3
+ *   - clicks table stream       →  writes clicks/ prefix to S3
  *
  * Within each 1-minute tumbling window Lambda is invoked repeatedly with partial
  * batches from the stream. Each invocation accumulates impression/click counts per
  * campaign into `state`, which Lambda preserves across invocations in the window.
- * On the final invocation (`isFinalInvokeForWindow = true`) the aggregated counts
- * are flushed to PostgreSQL and state is reset.
+ * On the final invocation the aggregated counts are written as a CSV to S3 and
+ * state is reset. A separate loader Lambda picks up the file and upserts into PostgreSQL.
  *
  * State shape:  { [campaignId]: number }
+ *
+ * S3 key format: {impressions|clicks}/{YYYY}/{MM}/{DD}/{HH-MM-SS}.csv
  */
 
-import pg from 'pg'
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
 
-const { Pool } = pg
+const s3 = new S3Client({ region: process.env.AWS_REGION ?? 'us-east-1' })
 
-// Pool is reused across invocations within the same Lambda execution environment.
-// It is only connected on the final invocation of each window.
-let pool
+const BUCKET = process.env.S3_BUCKET
 
-const getPool = () => {
-  if (!pool) {
-    pool = new Pool({
-      host:     process.env.POSTGRES_HOST,
-      port:     parseInt(process.env.POSTGRES_PORT ?? '5432'),
-      database: process.env.POSTGRES_DB,
-      user:     process.env.POSTGRES_USER,
-      password: process.env.POSTGRES_PASSWORD,
-    })
-  }
-  return pool
+const detectPrefix = (eventSourceARN = '') =>
+  eventSourceARN.includes('/clicks/') ? 'clicks' : 'impressions'
+
+const buildS3Key = (prefix, windowStart) => {
+  const d = new Date(windowStart)
+  const yyyy = d.getUTCFullYear()
+  const mm   = String(d.getUTCMonth() + 1).padStart(2, '0')
+  const dd   = String(d.getUTCDate()).padStart(2, '0')
+  const time = d.toISOString().slice(11, 19).replace(/:/g, '-') // HH-MM-SS
+  return `${prefix}/${yyyy}/${mm}/${dd}/${time}.csv`
 }
 
-const detectTable = (eventSourceARN = '') =>
-  eventSourceARN.includes('/clicks/') ? 'click_events' : 'impression_events'
+const buildCSV = (state, occurredAt) => {
+  const header = 'campaign_id,occurred_at,count'
+  const lines  = Object.entries(state).map(([campaignId, count]) =>
+    `${campaignId},${occurredAt},${count}`
+  )
+  return [header, ...lines].join('\n')
+}
 
 export const handler = async (event) => {
   const {
@@ -63,38 +67,21 @@ export const handler = async (event) => {
     return { state: updatedState }
   }
 
-  // Final invocation — flush aggregated counts to PostgreSQL
-  const pgTable  = detectTable(eventSourceARN)
-  const occurredAt = new Date(tumblingWindow.start).toISOString()
+  // Final invocation — write CSV to S3
+  if (Object.keys(updatedState).length > 0) {
+    const prefix    = detectPrefix(eventSourceARN)
+    const occurredAt = tumblingWindow.start
+    const key       = buildS3Key(prefix, occurredAt)
+    const csv       = buildCSV(updatedState, occurredAt)
 
-  // One row per campaign containing the total count for this window
-  const rows = []
-  for (const [campaignId, count] of Object.entries(updatedState)) {
-    rows.push([campaignId, occurredAt, count])
-  }
+    await s3.send(new PutObjectCommand({
+      Bucket:      BUCKET,
+      Key:         key,
+      Body:        csv,
+      ContentType: 'text/csv',
+    }))
 
-  if (rows.length > 0) {
-    const client = await getPool().connect()
-    try {
-      const placeholders = rows
-        .map((_, i) => {
-          const currentRowToColOffset = i * 3
-          return `($${currentRowToColOffset + 1}, $${currentRowToColOffset + 2}, $${currentRowToColOffset + 3})`
-        })
-        .join(', ')
-      await client.query(
-        `INSERT INTO ${pgTable} (campaign_id, occurred_at, count)
-         VALUES ${placeholders}
-         ON CONFLICT (campaign_id, occurred_at) DO UPDATE SET count = ${pgTable}.count + EXCLUDED.count`,
-        rows.flat()
-      )
-      console.log(
-        `Window ${tumblingWindow.start} → ${tumblingWindow.end}: ` +
-        `inserted ${rows.length} rows into ${pgTable}`
-      )
-    } finally {
-      client.release()
-    }
+    console.log(`Window ${tumblingWindow.start} → ${tumblingWindow.end}: wrote ${Object.keys(updatedState).length} rows to s3://${BUCKET}/${key}`)
   }
 
   return { state: {} }
