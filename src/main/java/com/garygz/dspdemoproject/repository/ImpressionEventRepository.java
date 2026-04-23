@@ -7,17 +7,18 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.util.List;
+import com.garygz.dspdemoproject.entity.ImpressionEventId;
 import java.util.UUID;
 
-public interface ImpressionEventRepository extends JpaRepository<ImpressionEvent, UUID> {
+public interface ImpressionEventRepository extends JpaRepository<ImpressionEvent, ImpressionEventId> {
 
     @Query("""
-            SELECT i.occurredOn, COUNT(i)
+            SELECT CAST(i.occurredAt AS LocalDate), SUM(i.count)
             FROM ImpressionEvent i
             WHERE i.campaignId = :campaignId
-              AND i.occurredOn BETWEEN :from AND :to
-            GROUP BY i.occurredOn
-            ORDER BY i.occurredOn
+              AND CAST(i.occurredAt AS LocalDate) BETWEEN :from AND :to
+            GROUP BY CAST(i.occurredAt AS LocalDate)
+            ORDER BY CAST(i.occurredAt AS LocalDate)
             """)
     List<Object[]> countPerDay(@Param("campaignId") UUID campaignId,
                                @Param("from") LocalDate from,
