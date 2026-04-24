@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -46,6 +47,33 @@ public class DataIngestionController {
         click.setTimestamp(Instant.now().toString());
         logger.debug("Recording click {} for impression {} campaign {}", body.id(), body.impressionId(), body.campaignId());
         dataIngestionService.addClick(click);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @PostMapping("/impressions/batch")
+    public ResponseEntity<Void> addImpressions(@RequestBody List<ImpressionRequest> body) {
+        logger.debug("Recording batch of {} impressions", body.size());
+        body.forEach(req -> {
+            Impression impression = new Impression();
+            impression.setId(req.id().toString());
+            impression.setCampaignId(req.campaignId().toString());
+            impression.setTimestamp(Instant.now().toString());
+            dataIngestionService.addImpression(impression);
+        });
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @PostMapping("/clicks/batch")
+    public ResponseEntity<Void> addClicks(@RequestBody List<ClickRequest> body) {
+        logger.debug("Recording batch of {} clicks", body.size());
+        body.forEach(req -> {
+            Click click = new Click();
+            click.setId(req.id().toString());
+            click.setImpressionId(req.impressionId().toString());
+            click.setCampaignId(req.campaignId().toString());
+            click.setTimestamp(Instant.now().toString());
+            dataIngestionService.addClick(click);
+        });
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 }
