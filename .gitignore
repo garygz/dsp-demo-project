@@ -45,3 +45,18 @@ out/
 
 # macOS
 .DS_Store
+
+lambda/aggregator.zip
+lambda/aggregator/node_modules/
+lambda/aggregator/package-lock.json
+lambda/loader.zip
+lambda/loader/node_modules/
+lambda/loader/package-lock.json
+
+# Terraform
+infra/.terraform/
+infra/.terraform.lock.hcl
+infra/*.tfstate
+infra/*.tfstate.backup
+infra/*.tfvars
+infra/crash.log
