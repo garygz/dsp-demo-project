@@ -13,9 +13,13 @@
  *
  * State shape:  { [campaignId]: number }
  *
- * S3 key format: {impressions|clicks}/{YYYY}/{MM}/{DD}/{HH-MM-SS}.csv
+ * S3 key format: {impressions|clicks}/{YYYY}/{MM}/{DD}/{HH}/{HH-MM}-{shardId}.csv.gz
+ *
+ * One file per shard per minute — eliminates write conflicts when multiple shards
+ * cover the same minute window. The hourly loader reads all files under /HH/ prefix.
  */
 
+import { gzipSync } from 'node:zlib'
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
 
 const s3 = new S3Client({ region: process.env.AWS_REGION ?? 'us-east-1' })
@@ -25,13 +29,17 @@ const BUCKET = process.env.S3_BUCKET
 const detectPrefix = (eventSourceARN = '') =>
   eventSourceARN.includes('/clicks/') ? 'clicks' : 'impressions'
 
-const buildS3Key = (prefix, windowStart) => {
-  const d = new Date(windowStart)
+// arn:aws:dynamodb:region:account:table/tableName/stream/timestamp/shard/shardId-XXXXX
+const extractShardId = (eventSourceARN = '') => eventSourceARN.split('/').pop()
+
+const buildS3Key = (prefix, windowStart, shardId) => {
+  const d    = new Date(windowStart)
   const yyyy = d.getUTCFullYear()
   const mm   = String(d.getUTCMonth() + 1).padStart(2, '0')
   const dd   = String(d.getUTCDate()).padStart(2, '0')
-  const time = d.toISOString().slice(11, 19).replace(/:/g, '-') // HH-MM-SS
-  return `${prefix}/${yyyy}/${mm}/${dd}/${time}.csv`
+  const hh   = String(d.getUTCHours()).padStart(2, '0')
+  const min  = String(d.getUTCMinutes()).padStart(2, '0')
+  return `${prefix}/${yyyy}/${mm}/${dd}/${hh}/${hh}-${min}-${shardId}.csv.gz`
 }
 
 const buildCSV = (state, occurredAt) => {
@@ -69,16 +77,18 @@ export const handler = async (event) => {
 
   // Final invocation — write CSV to S3
   if (Object.keys(updatedState).length > 0) {
-    const prefix    = detectPrefix(eventSourceARN)
+    const prefix     = detectPrefix(eventSourceARN)
+    const shardId    = extractShardId(eventSourceARN)
     const occurredAt = tumblingWindow.start
-    const key       = buildS3Key(prefix, occurredAt)
-    const csv       = buildCSV(updatedState, occurredAt)
+    const key        = buildS3Key(prefix, occurredAt, shardId)
+    const csv        = buildCSV(updatedState, occurredAt)
 
     await s3.send(new PutObjectCommand({
-      Bucket:      BUCKET,
-      Key:         key,
-      Body:        csv,
-      ContentType: 'text/csv',
+      Bucket:          BUCKET,
+      Key:             key,
+      Body:            gzipSync(csv),
+      ContentType:     'text/csv',
+      ContentEncoding: 'gzip',
     }))
 
     console.log(`Window ${tumblingWindow.start} → ${tumblingWindow.end}: wrote ${Object.keys(updatedState).length} rows to s3://${BUCKET}/${key}`)

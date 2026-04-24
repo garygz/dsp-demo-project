@@ -2,16 +2,17 @@
  * S3 → PostgreSQL loader Lambda.
  *
  * Triggered by S3 PUT notifications from the aggregator Lambda.
- * Reads a CSV file, bulk-upserts rows into impression_events or click_events,
+ * Reads a gzipped CSV file, bulk-upserts rows into impression_events or click_events,
  * then deletes the file from S3.
  *
  * CSV format:  campaign_id,occurred_at,count
- * Key format:  {impressions|clicks}/{YYYY}/{MM}/{DD}/{HH-MM-SS}.csv
+ * Key format:  {impressions|clicks}/{YYYY}/{MM}/{DD}/{HH}/{HH-MM}-{shardId}.csv.gz
  *
  * Upsert strategy: ON CONFLICT (campaign_id, occurred_at) DO UPDATE SET count = table.count + EXCLUDED.count
  * This handles the rare case where two loader invocations race on the same window.
  */
 
+import { gunzipSync } from 'node:zlib'
 import { S3Client, GetObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3'
 import pg from 'pg'
 
@@ -42,7 +43,8 @@ const detectTable = (key = '') =>
 
 async function readS3Object(bucket, key) {
   const { Body } = await s3.send(new GetObjectCommand({ Bucket: bucket, Key: key }))
-  return Body.transformToString('utf-8')
+  const compressed = await Body.transformToByteArray()
+  return gunzipSync(compressed).toString('utf-8')
 }
 
 function parseCSV(csv) {
