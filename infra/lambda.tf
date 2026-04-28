@@ -35,8 +35,7 @@ resource "aws_lambda_function" "aggregator" {
 
   environment {
     variables = {
-      S3_BUCKET  = aws_s3_bucket.aggregations.bucket
-      AWS_REGION = var.aws_region
+      S3_BUCKET = aws_s3_bucket.aggregations.bucket
     }
   }
 
@@ -94,6 +93,8 @@ resource "aws_lambda_function" "loader" {
       PG_PORT     = "5432"
       PG_DATABASE = var.db_name
       PG_SSL      = "true"
+      PG_USER     = var.db_username
+      PG_PASSWORD = random_password.db.result
     }
   }
 

@@ -1,0 +1,27 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_URL
+      - IMAGE_TAG=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c1-7)
+      - echo Building image $ECR_URL:$IMAGE_TAG
+
+  build:
+    commands:
+      - echo Build started on `date`
+      - docker build --platform linux/amd64 -t $ECR_URL:$IMAGE_TAG -t $ECR_URL:latest .
+
+  post_build:
+    commands:
+      - echo Pushing image...
+      - docker push $ECR_URL:$IMAGE_TAG
+      - docker push $ECR_URL:latest
+      - echo Writing imagedefinitions.json...
+      - printf '[{"name":"%s","imageUri":"%s"}]' $CONTAINER_NAME $ECR_URL:$IMAGE_TAG > imagedefinitions.json
+      - cat imagedefinitions.json
+
+artifacts:
+  files:
+    - imagedefinitions.json

@@ -26,16 +26,18 @@ resource "aws_ecs_task_definition" "app" {
     image     = "${aws_ecr_repository.app.repository_url}:latest"
     essential = true
 
-    portMappings = [{
-      containerPort = var.container_port
-      protocol      = "tcp"
-    }]
+    portMappings = [
+      { containerPort = var.container_port, protocol = "tcp" },
+      { containerPort = 8081,               protocol = "tcp" }
+    ]
 
     environment = [
-      { name = "AWS_REGION",               value = var.aws_region },
-      { name = "SPRING_DATASOURCE_URL",    value = "jdbc:postgresql://${aws_db_instance.postgres.address}:5432/${var.db_name}" },
-      { name = "AUTH_DEV_BYPASS_ENABLED",  value = "false" },
-      { name = "AUTH_JWT_SECRET_NAME",     value = aws_secretsmanager_secret.jwt.name },
+      { name = "SPRING_PROFILES_ACTIVE",        value = "prod" },
+      { name = "AWS_REGION",                    value = var.aws_region },
+      { name = "SPRING_DATASOURCE_URL",         value = "jdbc:postgresql://${aws_db_instance.postgres.address}:5432/${var.db_name}" },
+      { name = "AUTH_JWT_SECRET_NAME",          value = aws_secretsmanager_secret.jwt.name },
+      { name = "DYNAMODB_IMPRESSIONS_TABLE",    value = aws_dynamodb_table.impressions.name },
+      { name = "DYNAMODB_CLICKS_TABLE",         value = aws_dynamodb_table.clicks.name },
     ]
 
     secrets = [
@@ -55,11 +57,12 @@ resource "aws_ecs_task_definition" "app" {
 }
 
 resource "aws_ecs_service" "app" {
-  name            = local.prefix
-  cluster         = aws_ecs_cluster.main.id
-  task_definition = aws_ecs_task_definition.app.arn
-  desired_count   = var.ecs_desired_count
-  launch_type     = "FARGATE"
+  name                               = local.prefix
+  cluster                            = aws_ecs_cluster.main.id
+  task_definition                    = aws_ecs_task_definition.app.arn
+  desired_count                      = var.ecs_desired_count
+  launch_type                        = "FARGATE"
+  health_check_grace_period_seconds  = 120
 
   network_configuration {
     subnets         = aws_subnet.private[*].id

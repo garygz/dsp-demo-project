@@ -71,7 +71,7 @@ variable "db_instance_class" {
 }
 
 variable "db_allocated_storage" {
-  description = "RDS allocated storage in GB"
+  description = "RDS allocated storage in GB (free tier includes 20 GB)"
   type        = number
   default     = 20
 }
@@ -81,13 +81,32 @@ variable "db_allocated_storage" {
 variable "dynamodb_impressions_table" {
   description = "DynamoDB table name for impression events"
   type        = string
-  default     = "impressions"
+  default     = "dsp-demo-impressions"
 }
 
 variable "dynamodb_clicks_table" {
   description = "DynamoDB table name for click events"
   type        = string
-  default     = "clicks"
+  default     = "dsp-demo-clicks"
+}
+
+# ── CI/CD ─────────────────────────────────────────────────────────────────────
+
+variable "github_owner" {
+  description = "GitHub organisation or username that owns the repository"
+  type        = string
+}
+
+variable "github_repo" {
+  description = "GitHub repository name"
+  type        = string
+  default     = "dsp-demo-project"
+}
+
+variable "github_branch" {
+  description = "Branch to build and deploy"
+  type        = string
+  default     = "main"
 }
 
 # ── Lambda ────────────────────────────────────────────────────────────────────
