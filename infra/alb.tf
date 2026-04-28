@@ -16,9 +16,11 @@ resource "aws_lb_target_group" "app" {
     path                = "/actuator/health"
     port                = "8081"
     healthy_threshold   = 2
-    unhealthy_threshold = 3
+    unhealthy_threshold = 5
     interval            = 30
-    timeout             = 5
+    timeout             = 10
+    matcher             = "200"
+    # gives the app up to 150s (5 * 30) to pass its first health check
   }
 }
 

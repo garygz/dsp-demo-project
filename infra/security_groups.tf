@@ -35,9 +35,17 @@ resource "aws_security_group" "ecs_tasks" {
   vpc_id = aws_vpc.main.id
 
   ingress {
-    description     = "From ALB"
+    description     = "App port from ALB"
     from_port       = var.container_port
     to_port         = var.container_port
+    protocol        = "tcp"
+    security_groups = [aws_security_group.alb.id]
+  }
+
+  ingress {
+    description     = "Actuator health check from ALB"
+    from_port       = 8081
+    to_port         = 8081
     protocol        = "tcp"
     security_groups = [aws_security_group.alb.id]
   }

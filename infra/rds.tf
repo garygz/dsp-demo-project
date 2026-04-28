@@ -23,11 +23,10 @@ resource "aws_db_instance" "postgres" {
   db_subnet_group_name   = aws_db_subnet_group.postgres.name
   vpc_security_group_ids = [aws_security_group.rds.id]
 
-  # Demo settings — enable multi-AZ and backups for production use
-  multi_az               = false
-  skip_final_snapshot    = true
-  deletion_protection    = false
-  backup_retention_period = 7
-
-  storage_encrypted = true
+  # Free tier settings
+  multi_az                = false
+  skip_final_snapshot     = true
+  deletion_protection     = false
+  backup_retention_period = 0
+  storage_encrypted       = false
 }

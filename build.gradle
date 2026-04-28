@@ -35,6 +35,7 @@ dependencies {
 
     // PostgreSQL JDBC driver (only needed at runtime)
     runtimeOnly 'org.postgresql:postgresql'
+
     testImplementation 'com.h2database:h2'
 
     // AWS DynamoDB Enhanced Client (SDK v2)
