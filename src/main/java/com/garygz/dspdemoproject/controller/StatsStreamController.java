@@ -49,13 +49,13 @@ public class StatsStreamController {
         return emitter;
     }
 
-    @Scheduled(fixedRate = 60_000)
+    @Scheduled(fixedRate = 15_000)
     public void pushLatestWindow() {
         if (emitters.isEmpty()) return;
 
         Instant now         = Instant.now();
-        Instant windowStart = now.minus(60, ChronoUnit.SECONDS);
-        String occurredAt   = now.truncatedTo(ChronoUnit.MINUTES).toString();
+        Instant windowStart = now.minus(15, ChronoUnit.SECONDS);
+        String occurredAt   = now.truncatedTo(ChronoUnit.SECONDS).toString();
         String fromIso      = windowStart.toString();
         String toIso        = now.toString();
 
