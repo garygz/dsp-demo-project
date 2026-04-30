@@ -53,13 +53,14 @@ public class DataIngestionController {
     @PostMapping("/impressions/batch")
     public ResponseEntity<Void> addImpressions(@RequestBody List<ImpressionRequest> body) {
         logger.debug("Recording batch of {} impressions", body.size());
-        body.forEach(req -> {
+        List<Impression> impressions = body.stream().map(req -> {
             Impression impression = new Impression();
             impression.setId(req.id().toString());
             impression.setCampaignId(req.campaignId().toString());
             impression.setTimestamp(Instant.now().toString());
-            dataIngestionService.addImpression(impression);
-        });
+            return impression;
+        }).toList();
+        dataIngestionService.addImpressions(impressions);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
