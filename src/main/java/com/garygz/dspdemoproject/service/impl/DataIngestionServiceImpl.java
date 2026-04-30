@@ -8,6 +8,8 @@ import com.garygz.dspdemoproject.service.DataIngestionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class DataIngestionServiceImpl implements DataIngestionService {
 
@@ -25,5 +27,11 @@ public class DataIngestionServiceImpl implements DataIngestionService {
     @Override
     public void addImpression(Impression impression) {
         impressionRepository.save(impression);
+    }
+
+    // DataIngestionServiceImpl.java
+    @Override
+    public void addImpressions(List<Impression> impressions) {
+        impressionRepository.saveAll(impressions);
     }
 }
