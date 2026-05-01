@@ -49,6 +49,25 @@ public class StatsStreamController {
         return emitter;
     }
 
+    // SSE comment keep-alive — prevents the ALB (and any proxy) from closing
+    // idle connections between 15-second data ticks.
+    @Scheduled(fixedRate = 20_000)
+    public void sendKeepAlive() {
+        if (emitters.isEmpty()) return;
+
+        List<SseEmitter> dead = new ArrayList<>();
+        emitters.values().forEach(list -> {
+            for (SseEmitter emitter : list) {
+                try {
+                    emitter.send(SseEmitter.event().comment("keep-alive"));
+                } catch (IOException e) {
+                    dead.add(emitter);
+                }
+            }
+            list.removeAll(dead);
+        });
+    }
+
     @Scheduled(fixedRate = 15_000)
     public void pushLatestWindow() {
         if (emitters.isEmpty()) return;

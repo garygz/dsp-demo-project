@@ -66,6 +66,7 @@ resource "aws_iam_role_policy" "ecs_task_dynamodb" {
         "dynamodb:GetItem",
         "dynamodb:Query",
         "dynamodb:Scan",
+        "dynamodb:BatchWriteItem",
       ]
       Resource = [
         aws_dynamodb_table.impressions.arn,

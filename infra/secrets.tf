@@ -5,7 +5,7 @@ resource "random_password" "jwt" {
 
 resource "aws_secretsmanager_secret" "jwt" {
   name                    = "${var.app_name}/${var.environment}/jwt-secret"
-  recovery_window_in_days = 7
+  recovery_window_in_days = 0
 }
 
 resource "aws_secretsmanager_secret_version" "jwt" {
