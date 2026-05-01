@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 @RestController
-@RequestMapping("/advertisers/{advertiserId}/campaigns/{campaignId}/stats")
+@RequestMapping("/v1/advertisers/{advertiserId}/campaigns/{campaignId}/stats")
 public class StatsStreamController {
 
     private static final Logger log = LoggerFactory.getLogger(StatsStreamController.class);

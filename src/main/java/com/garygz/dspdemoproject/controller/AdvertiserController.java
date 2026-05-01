@@ -1,5 +1,6 @@
 package com.garygz.dspdemoproject.controller;
 
+import com.garygz.dspdemoproject.controller.dto.CollectionResponse;
 import com.garygz.dspdemoproject.entity.Advertiser;
 import com.garygz.dspdemoproject.service.DashBoardService;
 import org.slf4j.Logger;
@@ -8,10 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
-@RequestMapping("/advertisers")
+@RequestMapping("/v1/advertisers")
 public class AdvertiserController {
 
     private static final Logger logger = LoggerFactory.getLogger(AdvertiserController.class);
@@ -23,8 +22,8 @@ public class AdvertiserController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Advertiser>> listAll() {
-        return ResponseEntity.ok(dashBoardService.getAllAdvertisers());
+    public ResponseEntity<CollectionResponse<Advertiser>> listAll() {
+        return ResponseEntity.ok(CollectionResponse.of(dashBoardService.getAllAdvertisers()));
     }
 
     @PostMapping

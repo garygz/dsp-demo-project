@@ -1,6 +1,7 @@
 package com.garygz.dspdemoproject.controller;
 
 import com.garygz.dspdemoproject.controller.dto.CampaignStatsResponse;
+import com.garygz.dspdemoproject.controller.dto.CollectionResponse;
 import com.garygz.dspdemoproject.entity.Campaign;
 import com.garygz.dspdemoproject.service.DashBoardService;
 import org.slf4j.Logger;
@@ -11,11 +12,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/advertisers/{advertiserId}/campaigns")
+@RequestMapping("/v1/advertisers/{advertiserId}/campaigns")
 public class CampaignController {
 
     private static final Logger logger = LoggerFactory.getLogger(CampaignController.class);
@@ -27,8 +27,8 @@ public class CampaignController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Campaign>> listAll(@PathVariable UUID advertiserId) {
-        return ResponseEntity.ok(dashBoardService.getAllCampaigns(advertiserId));
+    public ResponseEntity<CollectionResponse<Campaign>> listAll(@PathVariable UUID advertiserId) {
+        return ResponseEntity.ok(CollectionResponse.of(dashBoardService.getAllCampaigns(advertiserId)));
     }
 
     @PostMapping

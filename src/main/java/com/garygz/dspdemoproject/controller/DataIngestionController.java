@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
+@RequestMapping("/v1")
 public class DataIngestionController {
 
     private static final Logger logger = LoggerFactory.getLogger(DataIngestionController.class);
