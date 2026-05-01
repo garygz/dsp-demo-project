@@ -18,7 +18,7 @@ flowchart TB
     %% ── Compute ──────────────────────────────────────────────────────────────
     subgraph Private ["Private Subnets"]
         ECS["ECS Fargate\nSpring Boot\n0.5 vCPU · 1 GB"]
-        LAMBDA_LOAD["Loader Lambda\nNode.js 20\nbatch upsert → RDS"]
+        LAMBDA_LOAD["Loader Lambda\nNode.js 20\nlist S3 prefix → aggregate → upsert RDS"]
         RDS[("PostgreSQL 16\nRDS db.t3.micro\n─────────────\nadvertisers\ncampaigns\nimpression_events\nclick_events")]
     end
 
@@ -31,8 +31,8 @@ flowchart TB
     %% ── Aggregation pipeline ─────────────────────────────────────────────────
     subgraph Pipeline ["Aggregation Pipeline"]
         LAMBDA_AGG["Aggregator Lambda\nNode.js 20\n60s tumbling window"]
-        S3_CSV[("S3 Bucket\naggregated CSV\n(gzipped, 90d TTL)")]
-        EB["EventBridge\nS3 ObjectCreated rule"]
+        S3_CSV[("S3 Bucket\naggregated CSVs\ns3://bucket/YYYY/MM/DD/HH/\n(gzipped, 90d TTL)")]
+        EB["EventBridge\nScheduled rule · every 1 hour"]
     end
 
     %% ── Security / Config ────────────────────────────────────────────────────
@@ -53,11 +53,11 @@ flowchart TB
     Browser -->|"HTTP GET"| UI
 
     %% REST API calls
-    Browser -->|"REST · JWT\nGET /advertisers\nGET /campaigns\nGET /stats"| ALB
+    Browser -->|"REST · JWT\nGET /v1/advertisers\nGET /v1/campaigns\nGET /v1/stats"| ALB
     ALB --> ECS
 
     %% Live streaming (SSE)
-    Browser -->|"SSE · ?token=JWT\nGET /stats/stream"| ALB
+    Browser -->|"SSE · ?token=JWT\nGET /v1/stats/stream"| ALB
 
     %% Spring Boot → DynamoDB (high-frequency ingest)
     ECS -->|"BatchWriteItem\n≤25 items / request"| IMP
@@ -74,15 +74,17 @@ flowchart TB
     IMP -->|"DynamoDB Stream\nNEW_IMAGE"| LAMBDA_AGG
     CLK -->|"DynamoDB Stream\nNEW_IMAGE"| LAMBDA_AGG
 
-    %% Aggregator → S3
-    LAMBDA_AGG -->|"gzipped CSV\nper 60s window"| S3_CSV
+    %% Aggregator → S3 hourly path
+    LAMBDA_AGG -->|"gzipped CSV\nper 60s window\n→ s3://bucket/YYYY/MM/DD/HH/"| S3_CSV
 
-    %% S3 → EventBridge → Loader Lambda
-    S3_CSV -->|"ObjectCreated event"| EB
-    EB -->|"invoke"| LAMBDA_LOAD
+    %% EventBridge scheduled rule → Loader Lambda
+    EB -->|"invoke · hourly"| LAMBDA_LOAD
+
+    %% Loader lists current hour prefix and upserts
+    S3_CSV -->|"list prefix\nYYYY/MM/DD/HH/"| LAMBDA_LOAD
 
     %% Loader Lambda → RDS
-    LAMBDA_LOAD -->|"UPSERT\nimpression_events\nclick_events"| RDS
+    LAMBDA_LOAD -->|"UPSERT hourly chunk\nimpression_events\nclick_events"| RDS
 
     %% Secrets
     ECS -.->|"startup"| SM
@@ -113,10 +115,16 @@ flowchart TB
 
 ## Data Flow Summary
 
-| Path | Latency | Storage |
-|---|---|---|
-| Load Generator → Impressions/Clicks | Real-time | DynamoDB (raw events) |
-| DynamoDB Stream → Aggregator | ~60s tumbling window | S3 (gzipped CSV) |
-| S3 ObjectCreated → Loader → RDS | Seconds after CSV lands | PostgreSQL (daily aggregates) |
-| Live chart (SSE) | 15s polling window | DynamoDB (direct query) |
-| Historical chart (REST) | On demand | PostgreSQL (countPerDay) |
+| Path | Trigger | Latency | Storage |
+|---|---|---|---|
+| Load Generator → Impressions/Clicks | User action | Real-time | DynamoDB (raw events) |
+| DynamoDB Stream → Aggregator | New DynamoDB record | ~60s tumbling window | S3 gzipped CSV under `YYYY/MM/DD/HH/` |
+| EventBridge → Loader → RDS | Scheduled · every 1 hour | Up to 1 hour | PostgreSQL (hourly aggregates) |
+| Live chart (SSE) | 15s scheduler | 15s polling window | DynamoDB (direct query) |
+| Historical chart (REST) | User action | On demand | PostgreSQL (countPerDay) |
+
+## Aggregation Pipeline Detail
+
+1. **Aggregator Lambda** — triggered by DynamoDB Streams with a 60-second tumbling window. Reads new impression and click records, counts them, and writes a gzipped CSV to S3 under an hour-based prefix: `s3://bucket/YYYY/MM/DD/HH/`. Multiple CSVs may land in the same prefix within an hour.
+
+2. **Loader Lambda** — triggered by an EventBridge scheduled rule once per hour. Lists all files under the current hour's S3 prefix, reads and decompresses each CSV, aggregates the counts together, and upserts a single hourly chunk into the PostgreSQL `impression_events` and `click_events` tables. Processing the full prefix in one pass makes the loader resilient to the Aggregator firing multiple times within the same window and avoids small repeated writes to RDS.
