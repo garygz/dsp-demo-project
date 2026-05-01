@@ -40,16 +40,16 @@ A full-stack demo of a Demand-Side Platform (DSP) with real-time campaign tracki
 ### Screenshots
 
 **Campaign Management**
-![Campaign Management](docs/dsp-demo-page-1.png)
+![Campaign Management](docs/screenshots/dsp-demo-page-1.png)
 
 **Historical Stats**
-![Historical Stats](docs/dsp-demo-page-2.png)
+![Historical Stats](docs/screenshots/dsp-demo-page-2.png)
 
 **Load Generator**
-![Load Generator](docs/dsp-demo-page-3-gen.png)
+![Load Generator](docs/screenshots/dsp-demo-page-3-gen.png)
 
-**Live SSE Chart**
-![Live Chart](docs/dsp-demo-page-4-live.png)
+**Live SSE Chart (Real Time data streaming)**
+![Live Chart](docs/screenshots/dsp-demo-page-4-live.png)
 
 ---
 
