@@ -1,10 +1,16 @@
 resource "aws_dynamodb_table" "impressions" {
   name         = var.dynamodb_impressions_table
   billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "id"
+  hash_key     = "campaignId"
+  range_key    = "timestamp"
 
   attribute {
-    name = "id"
+    name = "campaignId"
+    type = "S"
+  }
+
+  attribute {
+    name = "timestamp"
     type = "S"
   }
 
@@ -15,10 +21,16 @@ resource "aws_dynamodb_table" "impressions" {
 resource "aws_dynamodb_table" "clicks" {
   name         = var.dynamodb_clicks_table
   billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "id"
+  hash_key     = "campaignId"
+  range_key    = "timestamp"
 
   attribute {
-    name = "id"
+    name = "campaignId"
+    type = "S"
+  }
+
+  attribute {
+    name = "timestamp"
     type = "S"
   }
 

@@ -3,6 +3,10 @@ resource "aws_lb" "main" {
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb.id]
   subnets            = aws_subnet.public[*].id
+
+  # SSE connections are long-lived — raise the idle timeout well above the
+  # 15-second tick interval so the ALB does not drop streaming connections.
+  idle_timeout = 300
 }
 
 resource "aws_lb_target_group" "app" {
