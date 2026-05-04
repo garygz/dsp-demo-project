@@ -119,7 +119,7 @@ Infrastructure is managed with Terraform in the `infra/` directory.
 
 | Variable | Description |
 |---|---|
-| `github_owner` | GitHub username or organisation |
+| `github_owner` | GitHub username or organization |
 | `github_repo` | Repository name (default: `dsp-demo-project`) |
 | `github_branch` | Branch to deploy (default: `main`) |
 
