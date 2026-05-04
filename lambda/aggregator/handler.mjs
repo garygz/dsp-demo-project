@@ -13,7 +13,7 @@
  *
  * State shape:  { [campaignId]: number }
  *
- * S3 key format: {impressions|clicks}/{YYYY}/{MM}/{DD}/{HH}/{HH-MM}-{shardId}.csv.gz
+ * S3 key format: {impressions|clicks}/year={YYYY}/month={MM}/day={DD}/hour={HH}/{HH-MM}-{shardId}.csv.gz
  *
  * One file per shard per minute — eliminates write conflicts when multiple shards
  * cover the same minute window. The hourly loader reads all files under /HH/ prefix.
@@ -39,7 +39,7 @@ const buildS3Key = (prefix, windowStart, shardId) => {
   const dd   = String(d.getUTCDate()).padStart(2, '0')
   const hh   = String(d.getUTCHours()).padStart(2, '0')
   const min  = String(d.getUTCMinutes()).padStart(2, '0')
-  return `${prefix}/${yyyy}/${mm}/${dd}/${hh}/${hh}-${min}-${shardId}.csv.gz`
+  return `${prefix}/year=${yyyy}/month=${mm}/day=${dd}/hour=${hh}/${hh}-${min}-${shardId}.csv.gz`
 }
 
 const buildCSV = (state, occurredAt) => {

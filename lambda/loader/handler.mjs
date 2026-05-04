@@ -6,7 +6,7 @@
  * PostgreSQL, then deletes each processed file.
  *
  * CSV format:  campaign_id,occurred_at,count
- * Key format:  {impressions|clicks}/{YYYY}/{MM}/{DD}/{HH}/{HH-MM}-{shardId}.csv.gz
+ * Key format:  {impressions|clicks}/year={YYYY}/month={MM}/day={DD}/hour={HH}/{HH-MM}-{shardId}.csv.gz
  *
  * Upsert strategy: ON CONFLICT (campaign_id, occurred_at) DO UPDATE SET count = table.count + EXCLUDED.count
  * This handles the rare case where two loader invocations race on the same window.
@@ -55,7 +55,7 @@ function buildHourPrefix(dataPrefix, date) {
   const mm   = String(d.getUTCMonth() + 1).padStart(2, '0')
   const dd   = String(d.getUTCDate()).padStart(2, '0')
   const hh   = String(d.getUTCHours()).padStart(2, '0')
-  return `${dataPrefix}/${yyyy}/${mm}/${dd}/${hh}/`
+  return `${dataPrefix}/year=${yyyy}/month=${mm}/day=${dd}/hour=${hh}/`
 }
 
 async function listPrefix(bucket, prefix) {
