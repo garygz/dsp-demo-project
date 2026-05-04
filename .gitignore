@@ -60,3 +60,4 @@ infra/*.tfstate
 infra/*.tfstate.backup
 infra/*.tfvars
 infra/crash.log
+infra/.terraform.tfstate.lock.info
