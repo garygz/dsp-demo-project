@@ -105,23 +105,24 @@ resource "aws_lambda_function" "loader" {
   depends_on = [aws_cloudwatch_log_group.loader]
 }
 
-# Allow S3 to invoke the loader Lambda
+# Allow EventBridge to invoke the loader Lambda
 
-resource "aws_lambda_permission" "s3_invoke_loader" {
-  statement_id  = "AllowS3Invoke"
+resource "aws_lambda_permission" "eventbridge_invoke_loader" {
+  statement_id  = "AllowEventBridgeInvoke"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.loader.function_name
-  principal     = "s3.amazonaws.com"
-  source_arn    = aws_s3_bucket.aggregations.arn
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.loader_schedule.arn
 }
 
-resource "aws_s3_bucket_notification" "csv_put" {
-  bucket = aws_s3_bucket.aggregations.id
+resource "aws_cloudwatch_event_rule" "loader_schedule" {
+  name                = "${local.prefix}-loader-hourly"
+  description         = "Trigger loader Lambda every hour"
+  schedule_expression = "rate(1 hour)"
+}
 
-  lambda_function {
-    lambda_function_arn = aws_lambda_function.loader.arn
-    events              = ["s3:ObjectCreated:*"]
-  }
-
-  depends_on = [aws_lambda_permission.s3_invoke_loader]
+resource "aws_cloudwatch_event_target" "loader_schedule" {
+  rule      = aws_cloudwatch_event_rule.loader_schedule.name
+  target_id = "loader"
+  arn       = aws_lambda_function.loader.arn
 }

@@ -175,11 +175,18 @@ resource "aws_iam_role_policy" "lambda_loader_s3" {
 
   policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [{
-      Effect   = "Allow"
-      Action   = ["s3:GetObject", "s3:DeleteObject"]
-      Resource = "${aws_s3_bucket.aggregations.arn}/*"
-    }]
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = ["s3:GetObject", "s3:DeleteObject"]
+        Resource = "${aws_s3_bucket.aggregations.arn}/*"
+      },
+      {
+        Effect   = "Allow"
+        Action   = "s3:ListBucket"
+        Resource = aws_s3_bucket.aggregations.arn
+      },
+    ]
   })
 }
 
