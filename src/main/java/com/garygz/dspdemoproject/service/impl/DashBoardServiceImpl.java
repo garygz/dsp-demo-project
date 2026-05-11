@@ -11,7 +11,6 @@ import com.garygz.dspdemoproject.repository.CampaignRepository;
 import com.garygz.dspdemoproject.repository.ClickEventRepository;
 import com.garygz.dspdemoproject.repository.ImpressionEventRepository;
 import com.garygz.dspdemoproject.service.DashBoardService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.List;
@@ -19,17 +18,20 @@ import java.util.UUID;
 
 @Service
 public class DashBoardServiceImpl implements DashBoardService {
-    @Autowired
-    private AdvertiserRepository advRepo;
+    private final AdvertiserRepository advRepo;
+    private final CampaignRepository campaignRepo;
+    private final ImpressionEventRepository impressionEventRepo;
+    private final ClickEventRepository clickEventRepo;
 
-    @Autowired
-    private CampaignRepository campaignRepo;
-
-    @Autowired
-    private ImpressionEventRepository impressionEventRepo;
-
-    @Autowired
-    private ClickEventRepository clickEventRepo;
+    public DashBoardServiceImpl(AdvertiserRepository advRepo,
+                                CampaignRepository campaignRepo,
+                                ImpressionEventRepository impressionEventRepo,
+                                ClickEventRepository clickEventRepo) {
+        this.advRepo = advRepo;
+        this.campaignRepo = campaignRepo;
+        this.impressionEventRepo = impressionEventRepo;
+        this.clickEventRepo = clickEventRepo;
+    }
 
     @Override
     public List<Advertiser> getAllAdvertisers() {
