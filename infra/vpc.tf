@@ -14,7 +14,7 @@ resource "aws_subnet" "public" {
   map_public_ip_on_launch = true
 }
 
-# ── Private subnets (ECS, RDS, Lambda) ───────────────────────────────────────
+# ── Private subnets (RDS, Lambda) ────────────────────────────────────────────
 
 resource "aws_subnet" "private" {
   count             = 2
@@ -27,19 +27,6 @@ resource "aws_subnet" "private" {
 
 resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.main.id
-}
-
-# ── NAT Gateway (single, for cost efficiency in demo) ────────────────────────
-
-resource "aws_eip" "nat" {
-  domain     = "vpc"
-  depends_on = [aws_internet_gateway.main]
-}
-
-resource "aws_nat_gateway" "main" {
-  allocation_id = aws_eip.nat.id
-  subnet_id     = aws_subnet.public[0].id
-  depends_on    = [aws_internet_gateway.main]
 }
 
 # ── Route tables ──────────────────────────────────────────────────────────────
@@ -61,11 +48,14 @@ resource "aws_route_table_association" "public" {
 
 resource "aws_route_table" "private" {
   vpc_id = aws_vpc.main.id
+}
 
-  route {
-    cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.main.id
-  }
+# S3 Gateway endpoint — free, allows Lambda in private subnets to reach S3 without NAT
+resource "aws_vpc_endpoint" "s3" {
+  vpc_id            = aws_vpc.main.id
+  service_name      = "com.amazonaws.${var.aws_region}.s3"
+  vpc_endpoint_type = "Gateway"
+  route_table_ids   = [aws_route_table.private.id]
 }
 
 resource "aws_route_table_association" "private" {
